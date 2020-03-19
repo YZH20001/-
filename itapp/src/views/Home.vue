@@ -56,8 +56,9 @@
           <span>{{date}}</span>
           <span>{{currentCity}}</span>
           <span style="padding: 17px;">{{this.weather}}</span>
+          <span>{{weatherText}}</span>
           <span>
-            <img :src="imgUrl" />
+            <img :src="imgSrc" />
           </span>
         </div>
         <router-view></router-view>
@@ -69,8 +70,7 @@
 <script>
 import Cookies from 'js-cookie'
 import jsonp from 'jsonp'
-// //天气接口
-// import { reqWeather, reqAddress } from '../api/index'
+import { reqWeather, reqAddress } from '../api/index'
 export default {
   data() {
     return {
@@ -91,8 +91,10 @@ export default {
       date: new Date(),
       //天气
       weather: '',
-      imgUrl: '',
-      currentCity: ''
+      imgSrc: '',
+      currentCity: '',
+      city: '',
+      weatherText: ''
     }
   },
   methods: {
@@ -141,27 +143,39 @@ export default {
     //点击按钮，却换菜单的折叠与展开
     toggleCollapse() {
       this.isCollapse = !this.isCollapse
+    },
+    //获取天气
+    async getWeather(city) {
+      const { date, dayPictureUrl, weather } = await reqWeather(city)
+      ;(this.weather = date),
+        (this.imgSrc = dayPictureUrl),
+        (this.weatherText = weather)
+    },
+    //获取位置
+    async getAddress() {
+      try {
+        const { address, address_detail } = await reqAddress()
+        // 坐标取值不准确
+        // let {x,y}=point
+        // x=(x/100000).toFixed(4)-13
+        // y=(y/100000).toFixed(4)-13
+        let { city } = address_detail
+        if (!city) {
+          city = '曲靖'
+        }
+        this.getWeather(city)
+        this.currentCity = address
+      } catch (error) {
+        this.getWeather()
+      }
     }
   },
   // 生命周期函数
   created() {
     this.getMenuList()
     this.user = Cookies.get('username')
-    //获取天气
-    this.$jsonp(
-      'https://api.map.baidu.com/telematics/v3/weather?location=曲靖&output=json&ak=3p49MVra6urFRGOT9s8UBWr2',
-      { callbackName: 'getJson' }
-    )
-      .then(data => {
-        console.log(data.results[0].currentCity)
-        this.weather = data.results[0].weather_data[0].weather
-        this.imgUrl = data.results[0].weather_data[0].dayPictureUrl
-        this.currentCity = data.results[0].currentCity
-      })
-      .catch(err => {
-        console.log('err')
-        console.log(err)
-      })
+    this.getWeather() //获取天气函数
+    this.getAddress() //获取位置函数
   },
   //时间
   mounted() {
@@ -231,7 +245,7 @@ img {
   margin-bottom: 15px;
   display: flex;
   align-items: center;
-  span:nth-child(1){
+  span:nth-child(1) {
     flex: 1;
   }
 }

@@ -10,10 +10,7 @@
       <el-row :gutter="20">
         <!-- 搜索与添加区域 -->
         <el-col :span="7">
-          <el-input placeholder="请输入内容" 
-          clearable
-           @clear="getUserList"
-            v-model="queryInfo.query">
+          <el-input placeholder="请输入内容" clearable @clear="getUserList" v-model="queryInfo.query">
             <el-button slot="append" icon="el-icon-search" @click="getUserList"></el-button>
           </el-input>
         </el-col>
@@ -22,14 +19,15 @@
           <el-button type="primary" @click="dialogVisible = true">添加用户</el-button>
         </el-col>
       </el-row>
+      <!-- 用户列表区 -->
       <el-table :data="userlist" border stripe style="width: 100%">
         <el-table-column type="index"></el-table-column>
         <el-table-column prop="username" label="姓名"></el-table-column>
         <el-table-column prop="email" label="邮箱"></el-table-column>
         <el-table-column prop="mobile" label="电话"></el-table-column>
         <el-table-column prop="role_name" label="角色"></el-table-column>
-        <el-table-column label="状态">
-          <template v-slot="scope">
+        <el-table-column prop="mg_state" label="状态">
+          <template slot-scope="scope">
             <el-switch v-model="scope.row.mg_state" @change="userStateChanged(scope.row)"></el-switch>
           </template>
         </el-table-column>
@@ -61,6 +59,7 @@
           </template>
         </el-table-column>
       </el-table>
+      <!-- 分页区域 -->
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
@@ -175,13 +174,16 @@ export default {
       cb(new Error('请输入合法的手机号'))
     }
     return {
+      //获取用户列表的参数对象
       queryInfo: {
         query: '',
         pagenum: 1,
         pagesize: 2
       },
       userlist: [],
+      // 总页数
       total: 0,
+      // 对话框显示与隐藏
       dialogVisible: false,
       editDialogVisible: false,
       addUserForm: {
@@ -242,24 +244,32 @@ export default {
       const { data } = await this.$http.get('users', {
         params: this.queryInfo
       })
+      if (data.meta.status !== 200) {
+        return this.$message.error('获取用户列表失败!')
+      }
       this.userlist = data.data.users
       this.total = data.data.total
     },
+    // 监听 pagesize 改变的事件
     handleSizeChange(newSize) {
       this.queryInfo.pagesize = newSize
       this.getUserList()
     },
+    // 监听页码值改变的事件
     handleCurrentChange(newPage) {
       this.queryInfo.pagenum = newPage
       this.getUserList()
     },
+    // 监听 switch 开关状态
     async userStateChanged(userinfo) {
       const { data } = await this.$http.put(
         `/users/${userinfo.id}/state/${userinfo.mg_state}`
       )
       if (data.meta.status !== 200) {
-        this.$message.error('获取信息失败！')
+        userinfo.mg_state = !userinfo.mg_state
+        return this.$message.error('更新用户状态失败！')
       }
+      this.$message.success('更新用户状态成功！')
     },
     addDialogClosed() {
       this.$refs.addUserFormRef.resetFields()
