@@ -51,6 +51,7 @@ export default {
       }
     };
   },
+  //此时页面上的元素已经渲染完毕
   async mounted() {
     // 基于准备好的dom，初始化echarts实例
     const myChart = echarts.init(document.getElementById("main"));
@@ -62,6 +63,7 @@ export default {
     // 指定图表的配置项和数据
     // 使用刚指定的配置项和数据显示图表。
     const result = _.merge(data.data, this.option);
+    //5.展示数据
     myChart.setOption(result);
   }
 };

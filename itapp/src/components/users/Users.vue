@@ -159,8 +159,10 @@ export default {
   data() {
     // 自定义邮箱校验规则
     var checkEmail = (rule, value, cb) => {
+      //验证邮箱的正则表达式
       const regEail = /^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,4}$/
       if (regEail.test(value)) {
+        //合法
         return cb()
       }
       cb(new Error('请输入合法的邮箱'))
@@ -185,7 +187,9 @@ export default {
       total: 0,
       // 对话框显示与隐藏
       dialogVisible: false,
+      //控制修改用户对话框的显示与隐藏
       editDialogVisible: false,
+      // 添加用户的表单数据
       addUserForm: {
         username: '',
         password: '',
@@ -193,6 +197,7 @@ export default {
         mobile: ''
       },
       setRoleDialogVisible: false,
+      // 添加表单的验证规则对象
       addUserFormRules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -223,7 +228,9 @@ export default {
           { validator: checkMobile, trigger: 'blur' }
         ]
       },
+      //查询到的用户信息对象
       editUserForm: {},
+      //修改表单的验证规则对象
       editUserFormRules: {
         email: [
           { required: true, message: '请输入邮箱', trigger: 'blur' },
@@ -271,12 +278,15 @@ export default {
       }
       this.$message.success('更新用户状态成功！')
     },
+    // 监听添加用户对话框的关闭事件
     addDialogClosed() {
       this.$refs.addUserFormRef.resetFields()
     },
+    // 点击按钮 添加用户
     addUser() {
       this.$refs.addUserFormRef.validate(async valid => {
         if (!valid) return
+        // 发送添加用户网络请求
         const { data } = await this.$http.post('users', this.addUserForm)
         if (data.meta.status !== 201) {
           this.$message.error('添加用户失败！')
@@ -286,6 +296,7 @@ export default {
         this.getUserList()
       })
     },
+    //展示编辑用户的对话框
     async showEditDialog(id) {
       const { data } = await this.$http.get(`users/${id}`)
       if (data.meta.status !== 200) {
@@ -294,12 +305,15 @@ export default {
       this.editUserForm = data.data
       this.editDialogVisible = true
     },
+    //监听修改用户对话框的关闭事件
     editDialogClosed() {
       this.$refs.editUserFormRef.resetFields()
     },
+    //修改用户信息提交
     editUser() {
       this.$refs.editUserFormRef.validate(async valid => {
         if (!valid) return
+        //发起修改用户信息数据请求
         const { data } = await this.$http.put(`users/${this.editUserForm.id}`, {
           email: this.editUserForm.email,
           mobile: this.editUserForm.mobile
@@ -307,11 +321,15 @@ export default {
         if (data.meta.status !== 200) {
           this.$message.error('修改用户信息失败！')
         }
+        //提示修改成功
         this.$message.success('修改成功！')
+        //关闭对话框
         this.editDialogVisible = false
+        //刷新数据列表
         this.getUserList()
       })
     },
+    //根据id删除对应的用户信息
     deleteUser(id) {
       this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
         confirmButtonText: '确定',
